@@ -24,7 +24,7 @@ The Electronics & Control Subsystem is the central data acquisition, processing,
 
 ### Sensors and Sensor Integration
 
-- **Load Cell Sensor**: Measures nest weight. Includes details for calibration and signal amplification.
+- **Load Cell Sensor**: Measures birds weight. Includes details for calibration and signal amplification.
 - **Temperature Sensor**: Monitors external nest temperature.
 - **Humidity Sensor**: Records humidity levels around the nest.
 - **Camera/Visual Sensor**: Captures short video clips for researcher's bird identification.
