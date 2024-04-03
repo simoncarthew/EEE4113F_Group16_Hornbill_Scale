@@ -1,10 +1,14 @@
+#ifndef WEIGHT_PROCESSOR_H
+#define WEIGHT_PROCESSOR_H
+
+// std includes
 #include <string>
 
 class WeightProcessor{
     public:
         int samp_rate; // sampling rate
         double* load_cell_force; // force measured at the load cell
-        double* weight_signal; // weight exerted by the bird
+        double* bird_force; // force exerted by the bird
         double* vertical_velocity; // vertical velocity of the bird
     private:
         // BIG 6
@@ -12,13 +16,21 @@ class WeightProcessor{
         WeightProcessor(double* lc_force); // constructor [force signal array]
 
         // SIGNAL CONVERSION
-        double* forceToWeight();
+        double* getBirdForce();
         double* forceToVertVelocity();
 
-        // UTILITY FUNCTIONS
+        // ZERO VELCOITY METHOD
         std::pair<double,double> getMinVelocity();
-        double getMean(double* signal);
+        
+        // MEAN METHOD
+        double Mean(double* signal);
+
+        // FIRST AND SECOND WEIGHT APPROX METHOD
+        double VelcoityTrend();
+        double FirstApprox();
+        double SecondApprox();
 
         // MAIN FUNCTION
         int estimateWeight();
 };
+#endif
