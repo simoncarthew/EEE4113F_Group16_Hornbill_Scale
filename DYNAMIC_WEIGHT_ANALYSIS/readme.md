@@ -7,8 +7,7 @@ The system is implemented as a c++ class, "WeightProcessor", that can be used by
 
 ## Subsubsystems
 Each subsystem is implemented by way of member function calls:
-- **Load Cell Calibration**: provides means to calibrate the load cell using known weights as inputs
-- **Load Cell Signal to Force**: converts the digital signal recieved from the ADC to a force signal
+- **Load Cell Signal to Force**: uses the calibraytion factor to convert the digital signal recieved from the ADC to a force signal
 - **Force Conversion**: converts the force read at the load cell to the vertical force exerted by the bird
 - **Weight Estimation**: analyses signal and chooses the relevant method to estimate the birds weight from the downward force exerted by the bird
 - **Weight Error**: produces an error associated with the estimated weight
