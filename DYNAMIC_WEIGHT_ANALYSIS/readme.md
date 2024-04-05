@@ -7,7 +7,7 @@ The system is implemented as a c++ class, "WeightProcessor", that can be used by
 
 ## Subsubsystems
 Each subsystem is implemented by way of member function calls:
-- **Load Cell Signal to Force**: uses the calibraytion factor to convert the digital signal recieved from the ADC to a force signal
+- **Load Cell Signal to Force**: uses the calibration factor to convert the digital signal recieved from the ADC to a force signal
 - **Force Conversion**: converts the force read at the load cell to the vertical force exerted by the bird
 - **Weight Estimation**: analyses signal and chooses the relevant method to estimate the birds weight from the downward force exerted by the bird
 - **Weight Error**: produces an error associated with the estimated weight
@@ -17,11 +17,11 @@ Each subsystem is implemented by way of member function calls:
 
 ### Electronics & Control:
 
-- **Input**: EC must provide the system with the raw digital signal retrieved from the ADC
+- **Input**: EC must provide the system with the raw digital signal retrieved from the ADC and its calibration factor
 - **Output**: System must return a weight estimation, associated error and success status
 - **Communicating**:
-    The digital signal from the load cell is communicated to the system by creating a WeightProcessor object and inputting it as an input parameter. The weight estimation, associated error and success status will be communicated back to the EC system by calling the "estimateWeight" member function that returns said values in appropriate types.
+    The digital signal from the load cell and its calivration factor are communicated to the system by creating a WeightProcessor object and inputting them as input parameters to the classes constructor. The weight estimation, associated error and success status will be communicated back to the EC system by calling the "estimateWeight" member function that returns said values in appropriate types.
 
 ### Physical Scale:
 
-- **Force Conversion**: physical system must be modeled using static body force equations to convert the force applied to the load cell to the downward force being exerted by the bird
+- **Force Conversion**: physical system must be modeled using static body force equations to convert the force applied to the load cell to the downward force being exerted by the bird which depends on the scales physical structure
