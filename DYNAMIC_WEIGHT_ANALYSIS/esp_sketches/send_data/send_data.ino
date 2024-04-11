@@ -100,11 +100,21 @@ void calibrate() {
     }
 }
 
+// buffer to store the last second of data
+const int bufferSize = 10; // Size of the buffer to store data
+long buffer[bufferSize]; // Buffer to store data
+int bufferIndex = 0; // Index to keep track of the buffer position
+
 void wait_for_object(int thresh){
   long raw_thresh = (thresh * scale.get_scale()) + scale.get_offset(); // calculate the raw theshold value
   long val = scale.read();
   while (fabs(val) < fabs(raw_thresh)){
+    // get the scale reading
     val = scale.read();
+    
+    // add reading to the buffer and ufdate buffer index
+    buffer[bufferIndex] = val;
+    bufferIndex = (bufferIndex + 1) % bufferSize;
   }
 }
 
@@ -113,14 +123,12 @@ void get_signal(int thresh, std::vector<long>* vals){
   int no_times_below_thresh = 0;
   long raw_thresh = (thresh * scale.get_scale()) + scale.get_offset(); // calculate the raw theshold value
   long val;
-  Serial.println(raw_thresh);
 
   // keep grabing values while the signal has been above threshold for set no. times
   while (max_times_below_thresh > no_times_below_thresh){
     val = scale.read();
     (*vals).push_back(val);
     if(fabs(val) < fabs(raw_thresh)){no_times_below_thresh++;}else{no_times_below_thresh=0;} // increase no. times below if below and set to zero if not
-    Serial.println(val);
   }
 }
 
@@ -147,10 +155,17 @@ void next_test(){
   get_signal(100,vals);
   Serial.println("Object left.");
 
+  // push the second of data onto the front of vector
+  for (int i = bufferSize - 1; i >= 0; i--) {
+    (*vals).insert((*vals).begin(), buffer[(bufferIndex + i) % bufferSize]);
+  }
+
   // send data to the laptop
   for(int i = 0; i < (*vals).size(); i++){
     Serial.println((*vals)[i]);
   }
+
+  // confirm sent data
   Serial.println("Sent data.");
 }
 
