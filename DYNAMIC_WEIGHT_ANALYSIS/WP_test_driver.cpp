@@ -9,14 +9,14 @@
 
 using namespace std;
 
-pair<string,double> read_sig(string sig_file, WeightProcessor& processor){
+pair<string,float> read_sig(string sig_file, WeightProcessor& processor){
     // initialise variables
     string title;
     int weight;
     int samp_rate;
-    double scale;
-    double offset;
-    vector<double> lc_sig_vec;
+    float scale;
+    float offset;
+    vector<float> lc_sig_vec;
     
     // open the input file
     std::ifstream file(sig_file);
@@ -65,19 +65,21 @@ pair<string,double> read_sig(string sig_file, WeightProcessor& processor){
     processor.setOffset(offset);
     processor.setLength(lc_sig_vec.size());
     processor.setForceWeight(lc_sig);
+    processor.setTime();
+    processor.setUnpadInt(processor.calculateUnpadInt(10,processor.getWeightSig()));
 
     // Close the file
     file.close();
     
     // create output
-    pair<string,double> out(title,weight);
+    pair<string,float> out(title,weight);
 
     delete [] lc_sig;
 
     return out;
 }
 
-void write_signal(double* sig, string sig_file, WeightProcessor& processor,double weight, string title){
+void write_signal(float* sig, string sig_file, WeightProcessor& processor,float weight, string title, string filt_type){
     
     // open the input file
     std::ofstream file(sig_file);
@@ -89,8 +91,9 @@ void write_signal(double* sig, string sig_file, WeightProcessor& processor,doubl
     }
     
     // write the paramters
-    file << "Title: " + title + " filtered\n";
+    file << "Title:" + title + "\n";
     file << "Sampling Frequency: " + to_string(processor.getSamplingRate()) + "\n";
+    file << "Filter Type: " + filt_type << "\n";
     file << "Weight: " + to_string(weight) + "\n";
 
     // get the signal values and print them
@@ -114,8 +117,8 @@ string path_to_name(string path){
 
 int main(){
     // path to signals
-    string get_directory = "test_signals/real_sim";
-    string save_directory = "results/filtered_sigs";
+    string get_directory = "test_signals/real_sim/sig_files";
+    string save_directory = "results/real_sim/sig_files";
 
     // ensure directory to signals exists
     if (!filesystem::exists(get_directory)) {
@@ -134,15 +137,15 @@ int main(){
 
     // interate over signals
     for(string sig_path : sig_paths){
-        // read in teh signal
+        // read in the signal
         WeightProcessor processor = WeightProcessor();
-        pair<string,double> meta = read_sig(sig_path,processor);
+        pair<string,float> meta = read_sig(sig_path,processor);
 
         /// FILTER ////
 
         // write the signal
         string save_path = save_directory + "/" + path_to_name(sig_path) + "_filtered.txt";
-        write_signal(processor.getWeightSig(),save_path,processor,meta.second,meta.first);       
+        write_signal(processor.getWeightSig(),save_path,processor,meta.second,meta.first,"test");       
         cout << path_to_name(sig_path) << endl;
     }
 

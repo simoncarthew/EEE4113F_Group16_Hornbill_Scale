@@ -1,0 +1,11 @@
+Title: <title>
+Sampling Frequency: <sampling frequency in Hz>
+Weight:
+Offset:
+Scale:
+0
+2
+10
+9
+40
+4

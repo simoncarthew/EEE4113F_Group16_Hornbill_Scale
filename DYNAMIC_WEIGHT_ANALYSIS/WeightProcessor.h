@@ -7,65 +7,76 @@
 class WeightProcessor{
     private:
         int samp_rate; // sampling rate
-        double scale; // scales raw readings based on calibration
-        double offset; // removed offset from tare
-        double* force; // force measured at the load cell
-        double* weight; // force exerted by the bird
-        double* vertical_velocity; // vertical velocity of the bird
-        double estimatedWeight;
+        float scale; // scales raw readings based on calibration
+        float offset; // removed offset from tare
+
+        float* force; // force measured at the load cell
+        float* weight; // force exerted by the bird
+        float* vertical_velocity; // vertical velocity of the bird
+        float* time;
+
+        std::pair<int,int> unpad_int; // interval where signal is non_zero
+
+        float estimatedWeight;
         int sig_length;
     public:
         // BIG 6
         // constructors
         WeightProcessor();
-        WeightProcessor(long* lc_sig,double s, double o,int s_r,int s_l); // constructor [force signal array]
+        WeightProcessor(long* lc_sig,float s, float o,int s_r,int s_l); // constructor [force signal array]
 
         // deconstructor
         ~WeightProcessor();
 
         // setters
-        void setScale(double s){scale = s;};
-        void setOffset(double o){offset = o;};
+        void setScale(float s){scale = s;};
+        void setOffset(float o){offset = o;};
         void setSamplingRate(int s_r){samp_rate = s_r;};
         void setForceWeight(long* lc_sig);
         void setLength(int s_l){sig_length = s_l;}
+        void setTime();
+        void setUnpadInt(std::pair<int,int> intervals){unpad_int = intervals;};
         
         // getters
-        double getScale(){return scale;};
-        double getOffset(){return offset;};
+        float getScale(){return scale;};
+        float getOffset(){return offset;};
         int getSamplingRate(){return samp_rate;};
         int getLength(){return sig_length;};
-        double* getWeightSig(){return weight;}
+        float* getWeightSig(){return weight;}
+        float* getForceSig(){return force;}
+        std::pair<int,int> getUnpadInt(){return unpad_int;}
 
-
-        // SIGNAL CONVERSION
-        double* forceToVertVelocity();
+        // UTILITY
+        float* forceToVertVelocity();
+        std::pair<int,int> calculateUnpadInt(int thresh, float* sig);
 
         // 1. LEAST VELCOITY METHOD
-        double leastVelocity(int interval);
+        float leastVelocity(int interval);
         
         // 2. MEAN METHOD
-        double Mean(double* signal);
+        float Mean(float* signal);
 
         // 3. FIRST AND SECOND WEIGHT APPROX METHOD
-        double VelcoityTrend();
-        double FirstApprox();
-        double SecondApprox();
+        float VelcoityTrend();
+        float FirstApprox();
+        float SecondApprox();
 
         // 4. KALMAN FILTER
-        double* kalmanFilter();
+        float* kalmanFilter();
 
         // 5. MOVING AVERAGE FILTER
-        double* movingAverage();
+        float* movingAverage(int window, float* sig);
 
-        // 6. MEDIAN FILTER
-        double* medianFilter();
+        // 6. EXPONENTIAL MOVING AVERAGE
 
-        // 7. LOW PASS
-        double* lowPass();
+        // 7. MEDIAN FILTER
+        float* medianFilter();
 
-        // 8. WAVELET TRANFORM
-        double* waveletTransform();
+        // 8. LOW PASS
+        float* lowPass();
+
+        // 9. WAVELET TRANFORM
+        float* waveletTransform();
 
         // MAIN FUNCTION
         int estimateWeight();
