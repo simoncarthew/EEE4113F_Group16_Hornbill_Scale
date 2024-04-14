@@ -68,6 +68,7 @@ class WeightProcessor{
         float* movingAverage(int window, float* sig);
 
         // 6. EXPONENTIAL MOVING AVERAGE
+        float* expMovingAverage(int window, float* sig);
 
         // 7. MEDIAN FILTER
         float* medianFilter();
