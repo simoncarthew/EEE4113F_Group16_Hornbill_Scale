@@ -18,6 +18,9 @@ HX711 scale;
 bool calibrated;
 bool weight_recieved;
 
+// test variables
+int min_bird_weight = 20;
+
 void calibrate() {
   while (calibrated == false){ // repeat until user validates that the scale is calibrated
     if (scale.is_ready()) { // check if the scale is ready
@@ -104,6 +107,7 @@ void calibrate() {
 const int bufferSize = 10; // Size of the buffer to store data
 long buffer[bufferSize]; // Buffer to store data
 int bufferIndex = 0; // Index to keep track of the buffer position
+int lastBufferIndex = 0;
 
 void wait_for_object(int thresh){
   long raw_thresh = (thresh * scale.get_scale()) + scale.get_offset(); // calculate the raw theshold value
@@ -113,8 +117,8 @@ void wait_for_object(int thresh){
     val = scale.read();
     
     // add reading to the buffer and ufdate buffer index
-    buffer[bufferIndex] = val;
-    bufferIndex = (bufferIndex + 1) % bufferSize;
+    buffer[bufferIndex % bufferSize] = val;
+    bufferIndex = (bufferIndex + 1);
   }
 }
 
@@ -148,16 +152,21 @@ void next_test(){
 
   // wait for the next object to land
   Serial.println("Waiting for object.");
-  wait_for_object(100);
+  wait_for_object(min_bird_weight);
 
   // get the objects weight signal
   Serial.println("Object detected.");
-  get_signal(100,vals);
+  get_signal(min_bird_weight,vals);
   Serial.println("Object left.");
 
   // push the second of data onto the front of vector
-  for (int i = bufferSize - 1; i >= 0; i--) {
-    (*vals).insert((*vals).begin(), buffer[(bufferIndex + i) % bufferSize]);
+  int no_taken = bufferSize;
+  if (bufferIndex - lastBufferIndex < bufferSize){
+    no_taken = bufferIndex - lastBufferIndex;
+  }
+  for (int i = no_taken - 1; i >= 0; i--) {
+    (*vals).insert((*vals).begin(), buffer[((bufferIndex % bufferSize) + i) % bufferSize]);
+    // buffer[(bufferIndex + i) % bufferSize] = scale.get_offset();
   }
 
   // send data to the laptop
@@ -195,4 +204,5 @@ void loop() {
   }
 
   next_test();
+  lastBufferIndex = bufferIndex;
 }
