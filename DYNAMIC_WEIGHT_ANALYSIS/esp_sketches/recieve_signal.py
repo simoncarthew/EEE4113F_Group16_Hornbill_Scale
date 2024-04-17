@@ -17,7 +17,6 @@ def create_file(filename):
         # Open the file in write mode, which will create a new file or overwrite an existing file
         with open(filename, 'w'):
             pass  # Just create an empty file
-        print("File", filename, "created or overwritten")
     except IOError as e:
         print("Error creating or overwriting file", filename, ":", e)
 
@@ -166,6 +165,7 @@ def multiple_Tests(dir_path,no_experiments):
             response = ser.readline().decode('utf-8').strip()  # Read the next line and remove leading/trailing whitespace
             print(response)  # Print the response
         print("Saved Experiment.")
+        print()
 
 
 

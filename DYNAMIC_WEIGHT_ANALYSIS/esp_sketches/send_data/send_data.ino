@@ -19,7 +19,7 @@ bool calibrated;
 bool weight_recieved;
 
 // test variables
-int min_bird_weight = 20;
+int min_bird_weight = 40;
 
 void calibrate() {
   while (calibrated == false){ // repeat until user validates that the scale is calibrated
@@ -123,7 +123,7 @@ void wait_for_object(int thresh){
 }
 
 void get_signal(int thresh, std::vector<long>* vals){
-  int max_times_below_thresh = 5;
+  int max_times_below_thresh = 10;
   int no_times_below_thresh = 0;
   long raw_thresh = (thresh * scale.get_scale()) + scale.get_offset(); // calculate the raw theshold value
   long val;
@@ -132,7 +132,11 @@ void get_signal(int thresh, std::vector<long>* vals){
   while (max_times_below_thresh > no_times_below_thresh){
     val = scale.read();
     (*vals).push_back(val);
-    if(fabs(val) < fabs(raw_thresh)){no_times_below_thresh++;}else{no_times_below_thresh=0;} // increase no. times below if below and set to zero if not
+    if(fabs(val) < fabs(raw_thresh)){ // increase no. times below if below and set to zero if not
+      no_times_below_thresh++;
+    }else{
+      no_times_below_thresh=0;
+    } 
   }
 }
 
@@ -185,6 +189,43 @@ void wait_for_user() {
   }
 }
 
+void tare_between_tests(int stab_range){
+  // print old offset value
+  Serial.println("Setting new tare.");
+  Serial.print("Old offset = ");
+  Serial.println(scale.get_offset());
+
+  // get new tare value
+  long values[10];
+  values[0] = scale.read();
+  int count = 1;
+  while (count < 10){
+    long val = scale.read();
+    long diff = fabs(val - values[count-1]);
+    if (diff < stab_range){
+      values[count] = val;
+      count = count + 1;
+    }else{
+      Serial.print("Not stable = ");
+      Serial.println(diff);
+      count = 1;
+      values[0] = scale.read();
+    }
+  }
+
+  // calculate average and set as tar
+  long sum = 0;
+  for (int i = 0; i < 10; ++i) {
+      sum += values[i];
+  }
+  long average = sum/10;
+  scale.set_offset(average);
+
+  // print new offset value
+  Serial.print("New offset = ");
+  Serial.println(scale.get_offset());
+}
+
 // set up the microcontroller
 void setup() {
   Serial.begin(921600);
@@ -205,4 +246,6 @@ void loop() {
 
   next_test();
   lastBufferIndex = bufferIndex;
+
+  // tare_between_tests(150);
 }
