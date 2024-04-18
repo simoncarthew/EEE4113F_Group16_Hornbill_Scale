@@ -127,7 +127,7 @@ void record_raw_scale_readings() {
 std::vector<int> combine_scale_readings() {
   //Combine the background scale readings and the raw scale readings
   std::vector<int> combined_scale_readings;
-  for(int i = 0; i < 10; i++) {
+  for(int i = 0; i < background_reading_index; i++) {
     combined_scale_readings.push_back(background_scale_readings[i]);
   }
   for(int i = 0; i < raw_scale_readings.size(); i++) {
