@@ -13,6 +13,7 @@
 */
 
 #include <Arduino.h>
+#include <vector> 
 #include <String.h> 
 #include <SPI.h>
 #include <Wire.h>
@@ -25,7 +26,7 @@
 #include "RTClib.h"
 #include "HX711.h"
 
-
+//_______________________________________________________________________________________________________________________________________________________________________________________
 // Constants
 #define I2C_ADDRESS 0x3c
 #define SCREEN_WIDTH 128
@@ -36,19 +37,21 @@
 #define LOADCELL_DOUT_PIN 16
 #define LOADCELL_SCK_PIN 4
 
-
+//_______________________________________________________________________________________________________________________________________________________________________________________
 // Sensor objects
 HX711 scale;
 RTC_DS3231 rtc;
 Adafruit_BME280 bme;
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-
+//_______________________________________________________________________________________________________________________________________________________________________________________
 // Variables
 char days[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 float weight;
 float temperature;
 float humidity;
+
+
 uint8_t HH;
 uint8_t MM;
 uint8_t SSS;
@@ -57,6 +60,8 @@ uint8_t MMM;
 uint16_t YY;
 uint8_t DAY;
 String timestamp;
+
+
 String dataframe1;
 String dataframe2;
 File  dataweight;
@@ -64,7 +69,76 @@ File dataweather;
 String header1 = "Timestamp,Weight";
 String header2 = "Timestamp,Temperature,Humidity";
 
+long background_scale_readings[10]; //Circular buffer to store the last 10 readings
+int background_reading_index = 0; //Index to keep track of the current reading in the circular buffer
+std::vector<int> raw_scale_readings; //Vector to store the raw scale readings when the bird is on the scale
+
+//_______________________________________________________________________________________________________________________________________________________________________________________
+//Thresholds for Control
+long WEIGHT_THRESHOLD = 1000; //tHE rAW adc VALUE OF THE SCALE
+int WEATHER_THRESHOLD = 30; //THE FREQUENCY OF THE WEATHER DATA IS RECORDING
+int DAY_THRESHOLD = 1; //THE LIGHT INTESNITY TO SEND ESP32 TO DEEP SLEEP
+
+
+//_______________________________________________________________________________________________________________________________________________________________________________________
 //Functions
+
+//***************************************************************************************************************************************************************************************
+
+/*
+* This function reads the scale readings in the background when the bird is not on the scale
+*/
+void background_scale_readings() {
+  //Read the scale readings in the background
+  background_scale_readings[background_reading_index] = scale.read();
+  background_reading_index = (background_reading_index + 1) % 10;
+}
+
+//***************************************************************************************************************************************************************************************
+/*
+* This function checks if the bird is on the scale
+*/
+bool is_bird_on_scale() {
+  //Check if the bird is on the scale
+  if(scale.read() > WEIGHT_THRESHOLD) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+//***************************************************************************************************************************************************************************************
+
+/*
+* This function records the raw scale readings when the bird is on the scale
+*/
+void record_raw_scale_readings() {
+  //Record the raw scale readings when the bird is on the scale
+  raw_scale_readings.push_back(scale.read());
+}
+
+
+
+//***************************************************************************************************************************************************************************************
+/*
+* This function combines the background scale readings and the raw scale readings into one vector to be processed by dymanimic force analysis algorithm
+* i.e [background_scale_readings(up until the background index), raw_scale_readings]
+*/
+std::vector<int> combine_scale_readings() {
+  //Combine the background scale readings and the raw scale readings
+  std::vector<int> combined_scale_readings;
+  for(int i = 0; i < 10; i++) {
+    combined_scale_readings.push_back(background_scale_readings[i]);
+  }
+  for(int i = 0; i < raw_scale_readings.size(); i++) {
+    combined_scale_readings.push_back(raw_scale_readings[i]);
+  }
+  return combined_scale_readings;
+}
+
+
+
+//***************************************************************************************************************************************************************************************
 
 /*
 * This function sets up the sensors and the serial communication(Serial is only for testing purposes)
@@ -107,6 +181,9 @@ void setupSensors() {
   }
 }
 
+
+//***************************************************************************************************************************************************************************************
+
 /*
 * This function sets up the files for the data to be written to
 */
@@ -131,6 +208,8 @@ void setupFiles() {
     Serial.println("Error, couldn't not open DataWeather.txt");
   }
 }
+
+//***************************************************************************************************************************************************************************************
 
 /*
 * This function reads the data from the sensors and the RTC and creates a string to be written to the SD card
@@ -157,6 +236,9 @@ void readData() {
   dataframe2 =(timestamp + "," + String(temperature) + "," + String(humidity)); 
 }
 
+//***************************************************************************************************************************************************************************************
+
+
 /*
 *This function writes the data to the SD card
 */
@@ -181,6 +263,8 @@ void writeData() {
     Serial.println("Error, couldn't not open DataWeather.txt");
   }
 }
+
+//***************************************************************************************************************************************************************************************
 
 /*
 * This function displays the data on the OLED display
@@ -212,11 +296,11 @@ void displayData() {
   display.display(); // Update the OLED display
 }
 
+//***************************************************************************************************************************************************************************************
 
 
 
-
-
+//_______________________________________________________________________________________________________________________________________________________________________________________
 
 // Main code
 void setup() {
