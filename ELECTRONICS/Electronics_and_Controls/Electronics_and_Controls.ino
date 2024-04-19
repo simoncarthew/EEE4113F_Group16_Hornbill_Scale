@@ -1,16 +1,24 @@
 /*
+* Project: Southern Ground Hornbill Monitoring System
+* Module: Weighing Scale Control Script (ESP32)
+* 
+* Description: This ESP32 code forms the core logic for the Southern Ground 
+*              Hornbill weighing scale system in the EEE4113F Design Course at UCT. 
+*              Its major tasks include:
 *
-* This ESP32 code is for the final project of the course "EEE4113F" Design Course at the University of Cape Town.
-* The code is the control for bird weighing scale for the Southern Ground Hornbill.
-* The code reads data from the scale, temperature and humidity sensor, and the real-time clock (RTC) and saves the data to an SD card.
-* The code also displays the system on an OLED display.
-* The code also records a video of the bird when the bird is on the scale and saves it to the SD card for bird identification.
-
-
+*   1. Sensor Data Acquisition: Reads weight data from the scale, temperature 
+*      and humidity from their respective sensors, and obtains timestamps from 
+*      the RTC (Real-Time Clock).
+*   2. Data Logging: Stores the collected sensor data and timestamps to an SD card.
+*   3. Display Output: Presents system information on an OLED display. 
+*   4. Weight-Triggered Recording: Detects the bird's presence on the scale and 
+*      initiates video recording for identification purposes.
+*
 * Author: Travimadox Webb
 * Date: 2024-04-18
 * Version: 1.0
 */
+
 
 #include <Arduino.h>
 #include <vector> 
