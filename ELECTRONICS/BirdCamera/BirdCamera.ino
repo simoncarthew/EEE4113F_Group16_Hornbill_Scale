@@ -17,7 +17,7 @@
 * Version: 1.0
 */
 
-//Adaption of Rui Santos to be implemetented to make it record videos instead of taking pictures
+//Adaption of Rui Santos to be implemetented to make it record videos instead of taking pictures of a predefoned time length
 
 
 #include "esp_camera.h"

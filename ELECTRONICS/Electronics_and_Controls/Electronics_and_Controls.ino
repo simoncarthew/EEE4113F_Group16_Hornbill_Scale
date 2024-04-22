@@ -19,6 +19,7 @@
 * Version: 1.0
 */
 
+//Implement sleeping modes next
 
 #include <Arduino.h>
 #include <vector> 
@@ -33,6 +34,7 @@
 #include "SD.h"
 #include "RTClib.h"
 #include "HX711.h"
+#include <esp_sleep.h>
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
 // Constants
@@ -44,6 +46,9 @@
 #define PIN_SPI_CS 5
 #define LOADCELL_DOUT_PIN 16
 #define LOADCELL_SCK_PIN 4
+#define WAKE_UP_PIN GPIO_NUM_33
+
+volatile bool shouldSleep = false;
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
 // Sensor objects
@@ -77,15 +82,14 @@ File dataweather;
 String header1 = "Timestamp,Weight";
 String header2 = "Timestamp,Temperature,Humidity";
 
-long background_scale_readings[10]; //Circular buffer to store the last 10 readings
+long background_scale_values[10]; //Circular buffer to store the last 10 readings
 int background_reading_index = 0; //Index to keep track of the current reading in the circular buffer
 std::vector<int> raw_scale_readings; //Vector to store the raw scale readings when the bird is on the scale
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
 //Thresholds for Control
-long WEIGHT_THRESHOLD = 1000; //tHE rAW adc VALUE OF THE SCALE
-int WEATHER_THRESHOLD = 30; //THE FREQUENCY OF THE WEATHER DATA IS RECORDING
-int DAY_THRESHOLD = 1; //THE LIGHT INTESNITY TO SEND ESP32 TO DEEP SLEEP
+long WEIGHT_THRESHOLD = -9200; //tHE rAW adc VALUE OF THE SCALE
+volatile bool isWeatherready = true;//will reset t false once we figure out the timer thing
 
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
@@ -98,7 +102,7 @@ int DAY_THRESHOLD = 1; //THE LIGHT INTESNITY TO SEND ESP32 TO DEEP SLEEP
 */
 void background_scale_readings() {
   //Read the scale readings in the background
-  background_scale_readings[background_reading_index] = scale.read();
+  background_scale_values[background_reading_index] = scale.read();
   background_reading_index = (background_reading_index + 1) % 10;
 }
 
@@ -108,7 +112,7 @@ void background_scale_readings() {
 */
 bool is_bird_on_scale() {
   //Check if the bird is on the scale
-  if(scale.read() > WEIGHT_THRESHOLD) {
+  if(scale.read() < WEIGHT_THRESHOLD) {
     return true;
   } else {
     return false;
@@ -136,7 +140,7 @@ std::vector<int> combine_scale_readings() {
   //Combine the background scale readings and the raw scale readings
   std::vector<int> combined_scale_readings;
   for(int i = 0; i < background_reading_index; i++) {
-    combined_scale_readings.push_back(background_scale_readings[i]);
+    combined_scale_readings.push_back(background_scale_values[i]);
   }
   for(int i = 0; i < raw_scale_readings.size(); i++) {
     combined_scale_readings.push_back(raw_scale_readings[i]);
@@ -152,9 +156,12 @@ std::vector<int> combine_scale_readings() {
 * This function sets up the sensors and the serial communication(Serial is only for testing purposes)
 */
 void setupSensors() {
+
   // Serial set up
   Serial.begin(9600);
   while (!Serial);
+
+
 
   // Scale set up
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
@@ -167,7 +174,10 @@ void setupSensors() {
     while (1);
   }
   rtc.adjust(DateTime(__DATE__, __TIME__));
-
+  if (rtc.lostPower()) {
+    Serial.println("RTC lost power, let's set the time!");
+    rtc.adjust(DateTime(__DATE__, __TIME__));
+  }
   // Temperature & Humidity Sensor setup
   bool status;
   status = bme.begin(0x76);  
@@ -187,6 +197,12 @@ void setupSensors() {
     Serial.println("Error, SD Initialization Failed");
     return;
   }
+  
+
+ 
+
+  
+
 }
 
 
@@ -222,12 +238,9 @@ void setupFiles() {
 /*
 * This function reads the data from the sensors and the RTC and creates a string to be written to the SD card
 */
-void readData() {
-  // Read data from various sensors and RTC
+
+String readtimeData() {
   DateTime now = rtc.now();
-  weight = scale.get_units(5);
-  temperature = bme.readTemperature();
-  humidity = bme.readHumidity();
   HH = now.hour();
   MM = now.minute();
   SSS = now.second();
@@ -238,10 +251,34 @@ void readData() {
 
   // Combine the time stamp into one string
   timestamp = String(HH) + ":" + String(MM) + ":" + String(SSS) + " | " + String(DD) + "-" + String(MMM) + "-" + String(YY);
+  return timestamp;
+}
+
+void readweatherData() {
+  temperature = bme.readTemperature();
+  humidity = bme.readHumidity();
+
+  // Combine the time stamp into one string
+  timestamp = readtimeData();
+
+  // Create dataframe to write
+  dataframe2 =(timestamp + "," + String(temperature) + "," + String(humidity)); 
+}
+
+void readweightData() {
+  weight = scale.get_units(5);
+  // Combine the time stamp into one string
+  timestamp = readtimeData();
 
   // Create dataframe to write
   dataframe1 = (timestamp + "," + String(weight));
-  dataframe2 =(timestamp + "," + String(temperature) + "," + String(humidity)); 
+}
+
+float dynamic_weight_analysis(std::vector<int> combined_scale_readings, float calibration_factor) {
+  //Dynamic force analysis algorithm
+  //This function will be used to determine the weight of the bird on the scale
+  //The algorithm will be implemented in the next version of the code
+  return 0;
 }
 
 //***************************************************************************************************************************************************************************************
@@ -250,7 +287,7 @@ void readData() {
 /*
 *This function writes the data to the SD card
 */
-void writeData() {
+void writeWeightData() {
   // Write data to weight file
   dataweight = SD.open("/DataWeight.txt", FILE_APPEND);
   if (dataweight) {
@@ -261,7 +298,12 @@ void writeData() {
     Serial.println("Error, couldn't not open DataWeight.txt");
   }
 
-  // Write Weather data to weight file
+ 
+}
+
+
+void writeWeatherData() {
+   // Write Weather data to weight file
   dataweather = SD.open("/DataWeather.txt", FILE_APPEND);
   if (dataweather) {
     dataweather.println(dataframe2);
@@ -304,21 +346,84 @@ void displayData() {
   display.display(); // Update the OLED display
 }
 
+
+
 //***************************************************************************************************************************************************************************************
 
-
-
 //_______________________________________________________________________________________________________________________________________________________________________________________
-
-// Main code
+// Main Code
 void setup() {
+  // put your setup code here, to run once:
   setupSensors();
   setupFiles();
+
+ 
+  
 }
 
 void loop() {
-  readData();
-  displayData();
-  writeData();
-  delay(1000);
+
+  //Purely for testing purposes. Read the ra adc value and print it to the serial monitor
+  Serial.println(scale.read());
+
+  // put your main code here, to run repeatedly:
+  if(shouldSleep){
+    Serial.println("Going to sleep now");
+    esp_sleep_enable_ext0_wakeup(WAKE_UP_PIN, 0);
+    esp_deep_sleep_start();
+  }
+  else{
+    //If the bird is not on the scale, read the scale readings in the background
+    if(!is_bird_on_scale()) {
+      Serial.println("Bird is not on the scale");
+      background_scale_readings();
+    }
+
+    //Check if the bird is on the scale and record readings
+    while(is_bird_on_scale()) {
+      //Record the raw scale readings when the bird is on the scale
+      Serial.println("Bird is on the scale");
+      record_raw_scale_readings();
+      delay(100);
+    }
+
+    //Only proceed if raw_scale_readings is not empty
+    if(!raw_scale_readings.empty()) {
+
+      Serial.println("Processing weight data");
+      //Combine the background scale readings and the raw scale readings
+      std::vector<int> combined_scale_readings = combine_scale_readings();
+
+      //get weight data
+      weight = dynamic_weight_analysis(combined_scale_readings, CALIBRATION_FACTOR);
+
+      //write weight data
+      writeWeightData();
+
+      //clear the raw scale readings
+      raw_scale_readings.clear();
+    }
+
+
+    //Collect weather data every 60s
+    if(isWeatherready){
+      Serial.println("Processing weather data");
+      //get weather data
+      readweatherData();
+      writeWeatherData();
+      isWeatherready = false;
+    }
+
+    //display data
+    displayData();
+
+    delay(10000);
+    
+    
+
+
+
+
+  }
 }
+
