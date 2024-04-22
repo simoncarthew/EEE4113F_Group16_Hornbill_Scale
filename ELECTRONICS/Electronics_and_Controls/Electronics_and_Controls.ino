@@ -48,7 +48,7 @@
 #define LOADCELL_SCK_PIN 4
 #define WAKE_UP_PIN GPIO_NUM_33
 
-volatile bool shouldSleep = false;
+
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
 // Sensor objects
@@ -90,6 +90,9 @@ std::vector<int> raw_scale_readings; //Vector to store the raw scale readings wh
 //Thresholds for Control
 long WEIGHT_THRESHOLD = -9200; //tHE rAW adc VALUE OF THE SCALE
 volatile bool isWeatherready = true;//will reset t false once we figure out the timer thing
+volatile bool shouldSleep = false;
+unsigned long lastWeatherUpdate = 0;
+const unsigned long weatherUpdateInterval = 60000; // 60 seconds
 
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
@@ -139,7 +142,7 @@ void record_raw_scale_readings() {
 std::vector<int> combine_scale_readings() {
   //Combine the background scale readings and the raw scale readings
   std::vector<int> combined_scale_readings;
-  for(int i = 0; i < background_reading_index; i++) {
+  for(int i = 0; i < 10; i++) {
     combined_scale_readings.push_back(background_scale_values[i]);
   }
   for(int i = 0; i < raw_scale_readings.size(); i++) {
@@ -400,24 +403,37 @@ void loop() {
       //write weight data
       writeWeightData();
 
+      //Printthe raw scale readings to the serial monitor as array
+      Serial.print("Raw Scale Readings: [");
+      for(int i = 0; i < combined_scale_readings.size(); i++) {
+        Serial.print(combined_scale_readings[i]);
+        if(i != combined_scale_readings.size() - 1) {
+          Serial.print(", ");
+        }
+      }
+
+
       //clear the raw scale readings
       raw_scale_readings.clear();
     }
 
 
-    //Collect weather data every 60s
+    //Collect weather data every 60s to implemented soon
+
+
     if(isWeatherready){
+
       Serial.println("Processing weather data");
       //get weather data
       readweatherData();
       writeWeatherData();
-      isWeatherready = false;
+      //isWeatherready = false; will only be relevant once the update emchansim is implemented
     }
 
     //display data
     displayData();
 
-    delay(10000);
+    delay(60000);
     
     
 
