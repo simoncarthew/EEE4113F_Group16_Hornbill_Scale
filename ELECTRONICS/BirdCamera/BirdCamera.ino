@@ -155,6 +155,15 @@ void takeSavePhoto(){
   esp_camera_fb_return(fb); 
 }
 
+
+void takemultiplePhotos(int n){
+  for(int i = 0; i < n; i++){
+    takeSavePhoto();
+    //delay(1000);
+  }
+}
+
+
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
 
@@ -171,8 +180,20 @@ void setup() {
   initMicroSDCard();
 }
 
-void loop() {    
+/*void loop() {    
   // Take and Save Photo
   takeSavePhoto();
   delay(10000);
+}*/
+
+void loop() {
+  if (Serial.available()) { // Check if data is available to read
+    String command = Serial.readStringUntil('\n'); // Read the incoming data until newline character
+
+    if (command == "take_picture") { // Replace "take_picture" with your desired command
+      //takeSavePhoto();
+      takemultiplePhotos(5);
+       
+    }
+  }
 }

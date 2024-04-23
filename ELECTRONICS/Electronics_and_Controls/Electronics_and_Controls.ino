@@ -122,6 +122,16 @@ bool is_bird_on_scale() {
   }
 }
 
+//Fucntion to send command over uart to esp32 cam slave to take picture. Sne dcommand together iwth timestamp
+void takePicture(){
+  
+  //Send command to take picture: COmmand is "take picture"
+
+
+  //Send timestamp
+}
+
+
 //***************************************************************************************************************************************************************************************
 
 /*
@@ -190,7 +200,7 @@ void setupSensors() {
   }
 
   // OLED Setup
-  display.begin();
+  display.begin();4
   display.clearDisplay(); 
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
