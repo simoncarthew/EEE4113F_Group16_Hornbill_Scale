@@ -454,13 +454,13 @@ void loop() {
       //get weather data
       readweatherData();
       writeWeatherData();
-      //isWeatherready = false; will only be relevant once the update emchansim is implemented
+      isWeatherready = false; //will only be relevant once the update emchansim is implemented
     }
 
     //display data
     displayData();
 
-    delay(60000);
+    
     
     
 
