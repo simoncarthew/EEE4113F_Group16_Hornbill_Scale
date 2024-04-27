@@ -18,7 +18,7 @@ The Electronics & Control Subsystem is the central data acquisition, processing,
 - **Data Processing**: Calibrates and converts raw sensor readings.
 - **Data Reception and Transmission**: Handles incoming data streams and outgoing transmissions.
 - **Data Storage**: Manages storage on an SD card or other medium, including file naming conventions and error handling.
-- **Data Visualization**: Provides an interactive website interface for data viewing and retrieval.
+- **Data Visualization**: Provides an interactive website interface for data viewing and retrieval.(Not a necessity currently)
 - **Rationale**: A user-friendly interface streamlines data access for the researcher.
 
 
@@ -27,7 +27,7 @@ The Electronics & Control Subsystem is the central data acquisition, processing,
 - **Load Cell Sensor**: Measures birds weight. Includes details for calibration and signal amplification.
 - **Temperature Sensor**: Monitors external nest temperature.
 - **Humidity Sensor**: Records humidity levels around the nest.
-- **Camera/Visual Sensor**: Captures short video clips for researcher's bird identification.
+- **Camera/Visual Sensor**: Captures 5 picture clips for researcher's bird identification.
 - **Daylight Sensor**: Triggers power saving/sleep modes based on light availability.
 - **Rationale**: Power conservation is essential for extended field deployment.
   
