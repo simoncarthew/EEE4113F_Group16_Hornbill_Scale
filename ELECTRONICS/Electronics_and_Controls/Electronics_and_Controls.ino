@@ -42,7 +42,7 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
-#define CALIBRATION_FACTOR -257.379
+#define CALIBRATION_FACTOR -229.75
 #define PIN_SPI_CS 5
 #define LOADCELL_DOUT_PIN 16
 #define LOADCELL_SCK_PIN 4
@@ -308,7 +308,9 @@ float dynamic_weight_analysis(std::vector<int> combined_scale_readings, float ca
   //Dynamic force analysis algorithm
   //This function will be used to determine the weight of the bird on the scale
   //The algorithm will be implemented in the next version of the code
-  return 0;
+  float weight_placeholder = 123.56;
+  //return 0;
+  return weight_placeholder;
 }
 
 //***************************************************************************************************************************************************************************************
