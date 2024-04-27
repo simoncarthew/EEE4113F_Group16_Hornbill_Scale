@@ -59,6 +59,8 @@ Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, 
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
 // Variables
+hw_timer_t *timer = NULL;//Timer for weather data
+
 char days[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 float weight;
 float temperature;
@@ -89,10 +91,10 @@ std::vector<int> raw_scale_readings; //Vector to store the raw scale readings wh
 //_______________________________________________________________________________________________________________________________________________________________________________________
 //Thresholds for Control
 long WEIGHT_THRESHOLD = -9200; //tHE rAW adc VALUE OF THE SCALE
-volatile bool isWeatherready = true;//will reset t false once we figure out the timer thing
+volatile bool isWeatherready = false;
 volatile bool shouldSleep = false;
-unsigned long lastWeatherUpdate = 0;
-const unsigned long weatherUpdateInterval = 60000; // 60 seconds
+const long WEATHER_INTERVAL = 60000000; //60s in microseconds
+
 
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
@@ -164,7 +166,17 @@ std::vector<int> combine_scale_readings() {
 
 
 //***************************************************************************************************************************************************************************************
+/*
+* This function is the interrupt handler for the weather timer
+*/
+void IRAM_ATTR timerInterrupcion() {
+ isWeatherready = true;
+}
 
+
+
+
+//***************************************************************************************************************************************************************************************
 /*
 * This function sets up the sensors and the serial communication(Serial is only for testing purposes)
 */
@@ -200,7 +212,7 @@ void setupSensors() {
   }
 
   // OLED Setup
-  display.begin();4
+  display.begin();
   display.clearDisplay(); 
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
@@ -210,7 +222,12 @@ void setupSensors() {
     Serial.println("Error, SD Initialization Failed");
     return;
   }
-  
+
+  //Set up the weather timer
+  timer = timerBegin(0, 80, true); // Timer 0, clock divider 80
+  timerAttachInterrupt(timer, &timerInterrupcion, true); // Attach the interrupt handling function
+  timerAlarmWrite(timer, WEATHER_INTERVAL, true); // Interrupt every 60 seconds
+  timerAlarmEnable(timer); // Enable the alarm
 
  
 
@@ -397,7 +414,7 @@ void loop() {
       //Record the raw scale readings when the bird is on the scale
       Serial.println("Bird is on the scale");
       record_raw_scale_readings();
-      delay(100);
+     // delay(100);
     }
 
     //Only proceed if raw_scale_readings is not empty

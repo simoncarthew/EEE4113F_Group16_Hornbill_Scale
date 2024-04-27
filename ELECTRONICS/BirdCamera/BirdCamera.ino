@@ -130,9 +130,37 @@ void takeSavePhoto(){
   //fb = NULL; // reset to capture errors
   //fb = esp_camera_fb_get();
 
+157154155156151152153149150133134135130131132128129136137138139140141142143144145146147148
+
+void loop() {
+  if (Serial.available()) { // Check if data is available to read
+    String command = Serial.readStringUntil('\n'); // Read the incoming data until newline character
+
+    if (command == "take_picture") { // Replace "take_picture" with your desired command
+      //takeSavePhoto();
+      takemultiplePhotos(5);
+       
+    }
+
+Not connected. Select a board and a port to connect automatically.
+New Line
+
   if(!fb) {
     Serial.println("Camera capture failed");
     delay(1000);
+
+    String command = Serial.readStringUntil('\n'); // Read the incoming data until newline character
+
+    if (command == "take_picture") { // Replace "take_picture" with your desired command
+      //takeSavePhoto();
+      takemultiplePhotos(5);
+       
+    }
+  }
+}
+Not connected. Select a board and a port to connect automatically.
+New Line
+
     ESP.restart();
   }
 
