@@ -48,6 +48,7 @@
 #define PCLK_GPIO_NUM     22
 
 int pictureNumber = 0; // Number of the picture taken
+String timestamp = ""; // Timestamp of the picture taken
 
 // Stores the camera configuration parameters
 camera_config_t config;
@@ -98,9 +99,11 @@ void configInitCamera(){
 }
 
 // Get the picture filename based on the current ime
-String getPictureFilename(){
-
-  String filename = "/picture_" + String(pictureNumber) +".jpg";
+String getPictureFilename() {
+  String formattedTimestamp = timestamp;
+  formattedTimestamp.replace(':', '-');
+  formattedTimestamp.replace('|', '-');
+  String filename = "/picture_" + String(pictureNumber) + "_" + formattedTimestamp + ".jpg";
   pictureNumber++;
   return filename; 
 }
@@ -130,37 +133,9 @@ void takeSavePhoto(){
   //fb = NULL; // reset to capture errors
   //fb = esp_camera_fb_get();
 
-157154155156151152153149150133134135130131132128129136137138139140141142143144145146147148
-
-void loop() {
-  if (Serial.available()) { // Check if data is available to read
-    String command = Serial.readStringUntil('\n'); // Read the incoming data until newline character
-
-    if (command == "take_picture") { // Replace "take_picture" with your desired command
-      //takeSavePhoto();
-      takemultiplePhotos(5);
-       
-    }
-
-Not connected. Select a board and a port to connect automatically.
-New Line
-
   if(!fb) {
     Serial.println("Camera capture failed");
     delay(1000);
-
-    String command = Serial.readStringUntil('\n'); // Read the incoming data until newline character
-
-    if (command == "take_picture") { // Replace "take_picture" with your desired command
-      //takeSavePhoto();
-      takemultiplePhotos(5);
-       
-    }
-  }
-}
-Not connected. Select a board and a port to connect automatically.
-New Line
-
     ESP.restart();
   }
 
@@ -214,7 +189,7 @@ void setup() {
   delay(10000);
 }*/
 
-void loop() {
+/*void loop() {
   if (Serial.available()) { // Check if data is available to read
     String command = Serial.readStringUntil('\n'); // Read the incoming data until newline character
 
@@ -222,6 +197,21 @@ void loop() {
       //takeSavePhoto();
       takemultiplePhotos(5);
        
+    }
+  }
+}*/
+
+
+void loop() {
+  if (Serial.available()) { // Check if data is available to read
+    //Command format: command,timestamp\n
+    String command = Serial.readStringUntil(','); // Read the incoming data until comma character
+    timestamp = Serial.readStringUntil('\n'); // Read the timestamp until newline character
+
+    if (command == "1") {
+      //takeSavePhoto();
+      takemultiplePhotos(5);
+      Serial.println("Picture taken at: " + timestamp);
     }
   }
 }

@@ -22,6 +22,7 @@
 //Implement sleeping modes next
 
 #include <Arduino.h>
+#include <HardwareSerial.h>
 #include <vector> 
 #include <String.h> 
 #include <SPI.h>
@@ -44,9 +45,11 @@
 #define OLED_RESET -1
 #define CALIBRATION_FACTOR -229.75
 #define PIN_SPI_CS 5
-#define LOADCELL_DOUT_PIN 16
+#define LOADCELL_DOUT_PIN 27//Will revert back to 16 if we encounter any issues
 #define LOADCELL_SCK_PIN 4
 #define WAKE_UP_PIN GPIO_NUM_33
+#define UART2_TX 17
+#define UART2_RX 16
 
 
 
@@ -56,6 +59,7 @@ HX711 scale;
 RTC_DS3231 rtc;
 Adafruit_BME280 bme;
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+HardwareSerial uart2(2); // Create a HardwareSerial object for UART2
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
 // Variables
@@ -88,6 +92,8 @@ long background_scale_values[10]; //Circular buffer to store the last 10 reading
 int background_reading_index = 0; //Index to keep track of the current reading in the circular buffer
 std::vector<int> raw_scale_readings; //Vector to store the raw scale readings when the bird is on the scale
 
+
+volatile bool bird_was_on_scale = false; //To ensure we only take photos in one iteration instead of in every iteration
 //_______________________________________________________________________________________________________________________________________________________________________________________
 //Thresholds for Control
 long WEIGHT_THRESHOLD = -9200; //tHE rAW adc VALUE OF THE SCALE
@@ -124,14 +130,6 @@ bool is_bird_on_scale() {
   }
 }
 
-//Fucntion to send command over uart to esp32 cam slave to take picture. Sne dcommand together iwth timestamp
-void takePicture(){
-  
-  //Send command to take picture: COmmand is "take picture"
-
-
-  //Send timestamp
-}
 
 
 //***************************************************************************************************************************************************************************************
@@ -183,8 +181,13 @@ void IRAM_ATTR timerInterrupcion() {
 void setupSensors() {
 
   // Serial set up
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial);
+
+  //Hardware Serial set up
+  uart2.begin(115200, SERIAL_8N1, UART2_RX, UART2_TX);
+  while (!uart2);
+  Serial.println("UART2 is ready");
 
 
 
@@ -378,6 +381,21 @@ void displayData() {
   display.display(); // Update the OLED display
 }
 
+//***************************************************************************************************************************************************************************************
+/*
+*This fucntion sned the command to the esp32 cam to take a 5 pictures of the bird on the scale
+*/
+void takePictures(){
+  //Command format: command,timestamp\n
+  uart2.print("1,");
+  String timestamp = readtimeData();
+  uart2.println(timestamp);
+  Serial.println("Command sent to ESP32 Cam to take pictures");
+
+
+
+}
+
 
 
 //***************************************************************************************************************************************************************************************
@@ -410,14 +428,37 @@ void loop() {
       Serial.println("Bird is not on the scale");
       background_scale_readings();
     }
+    else{
+      Serial.println("Bird is on the scale and photos are being taken");
+      takePictures();
+
+      while(is_bird_on_scale()) {
+      //Record the raw scale readings when the bird is on the scale
+      Serial.println("Bird is on the scale and Data is being recorded");
+      record_raw_scale_readings();
+    }
+
+    }
+
+    //Need to think of a better way to implemnent tyhe below code//THink of firing interrupts
+
+    //-----------------------------------------------------------------------
+    //check if bird is on scale and take pictures
+   /* if(is_bird_on_scale()){
+      Serial.println("Bird is on the scale and photis are being taken");
+      takePictures();
+    }
 
     //Check if the bird is on the scale and record readings
     while(is_bird_on_scale()) {
       //Record the raw scale readings when the bird is on the scale
       Serial.println("Bird is on the scale");
       record_raw_scale_readings();
+      //takePictures();
      // delay(100);
-    }
+    }*/
+     //-----------------------------------------------------------------------
+
 
     //Only proceed if raw_scale_readings is not empty
     if(!raw_scale_readings.empty()) {
