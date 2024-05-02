@@ -111,14 +111,14 @@ String getPictureFilename() {
 // Initialize the micro SD card
 void initMicroSDCard(){
   // Start Micro SD card
-  Serial.println("Starting SD Card");
+  //Serial.println("Starting SD Card");
   if(!SD_MMC.begin()){
-    Serial.println("SD Card Mount Failed");
+    //Serial.println("SD Card Mount Failed");
     return;
   }
   uint8_t cardType = SD_MMC.cardType();
   if(cardType == CARD_NONE){
-    Serial.println("No SD Card attached");
+    //Serial.println("No SD Card attached");
     return;
   }
 }
@@ -134,7 +134,7 @@ void takeSavePhoto(){
   //fb = esp_camera_fb_get();
 
   if(!fb) {
-    Serial.println("Camera capture failed");
+    //Serial.println("Camera capture failed");
     delay(1000);
     ESP.restart();
   }
@@ -142,17 +142,17 @@ void takeSavePhoto(){
 
   // Path where new picture will be saved in SD Card
   String path = getPictureFilename();
-  Serial.printf("Picture file name: %s\n", path.c_str());
+  //Serial.printf("Picture file name: %s\n", path.c_str());
 
   // Save picture to microSD card
   fs::FS &fs = SD_MMC; 
   File file = fs.open(path.c_str(),FILE_WRITE);
   if(!file){
-    Serial.printf("Failed to open file in writing mode");
+    //Serial.printf("Failed to open file in writing mode");
   } 
   else {
     file.write(fb->buf, fb->len); // payload (image), payload length
-    Serial.printf("Saved: %s\n", path.c_str());
+    //Serial.printf("Saved: %s\n", path.c_str());
   }
   file.close();
   esp_camera_fb_return(fb); 
@@ -162,7 +162,7 @@ void takeSavePhoto(){
 void takemultiplePhotos(int n){
   for(int i = 0; i < n; i++){
     takeSavePhoto();
-    //delay(1000);
+    delay(1000);
   }
 }
 
@@ -175,11 +175,11 @@ void setup() {
   delay(2000);
 
   // Initialize the camera  
-  Serial.print("Initializing the camera module...");
+  //Serial.print("Initializing the camera module...");
   configInitCamera();
-  Serial.println("Ok!");
+  //Serial.println("Ok!");
   // Initialize MicroSD
-  Serial.print("Initializing the MicroSD card module... ");
+ // Serial.print("Initializing the MicroSD card module... ");
   initMicroSDCard();
 }
 
@@ -211,7 +211,7 @@ void loop() {
     if (command == "1") {
       //takeSavePhoto();
       takemultiplePhotos(5);
-      Serial.println("Picture taken at: " + timestamp);
+      //Serial.println("Picture taken at: " + timestamp);
     }
   }
 }

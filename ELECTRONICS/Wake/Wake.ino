@@ -272,7 +272,7 @@ void setup_sleep() {
 
 //***************************************************************************************************************************************************************************************
 String getFilename(String s) {
-  String filename = s +"_"+ readtimeData2() +".txt";
+  String filename = s +"_"+ readtimeData2() +".csv";
   return filename; 
 }
 
@@ -289,9 +289,9 @@ void setupFiles() {
   if (dataweight) {
     dataweight.println(header1);
     dataweight.close();
-    Serial.println("Success, data written to DataWeight.txt");
+    Serial.println("Success, data written to DataWeight.csv");
   } else {
-    Serial.println("Error, couldn't not open DataWeight.txt");
+    Serial.println("Error, couldn't not open DataWeight.csv");
   }
 
   // Weather data
@@ -302,9 +302,9 @@ void setupFiles() {
   if (dataweather) {
     dataweather.println(header2);
     dataweather.close();
-    Serial.println("Success, data written to DataWeather.txt");
+    Serial.println("Success, data written to DataWeather.csv");
   } else {
-    Serial.println("Error, couldn't not open DataWeather.txt");
+    Serial.println("Error, couldn't not open DataWeather.csv");
   }
 }
 
@@ -354,7 +354,8 @@ void readweatherData() {
 }
 
 void readweightData() {
-  weight = scale.get_units(5);
+ // weight = scale.get_units(5);
+  weight = dynamic_weight_analysis(weight, CALIBRATION_FACTOR);
   // Combine the time stamp into one string
   timestamp = readtimeData();
 
@@ -384,9 +385,9 @@ void writeWeightData() {
   if (dataweight) {
     dataweight.println(dataframe1);
     dataweight.close();
-    Serial.println("Success, data written to DataWeight.txt");
+    Serial.println("Success, data written to DataWeight.csv");
   } else {
-    Serial.println("Error, couldn't not open DataWeight.txt");
+    Serial.println("Error, couldn't not open DataWeight.csv");
   }
 
  
@@ -400,9 +401,9 @@ void writeWeatherData() {
   if (dataweather) {
     dataweather.println(dataframe2);
     dataweather.close();
-    Serial.println("Success, data written to DataWeather.txt");
+    Serial.println("Success, data written to DataWeather.csv");
   } else {
-    Serial.println("Error, couldn't not open DataWeather.txt");
+    Serial.println("Error, couldn't not open DataWeather.csv");
   }
 }
 
@@ -530,7 +531,8 @@ void loop() {
       std::vector<int> combined_scale_readings = combine_scale_readings();
 
       //get weight data
-      weight = dynamic_weight_analysis(combined_scale_readings, CALIBRATION_FACTOR);
+      //weight = dynamic_weight_analysis(combined_scale_readings, CALIBRATION_FACTOR);
+      readweightData();
 
       //write weight data
       writeWeightData();
