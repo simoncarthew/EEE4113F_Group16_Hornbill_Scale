@@ -359,15 +359,7 @@ void readweatherData() {
   dataframe2 =(timestamp + "," + String(temperature) + "," + String(humidity)); 
 }
 
-void readweightData() {
- // weight = scale.get_units(5);
-  weight = dynamic_weight_analysis(weight, CALIBRATION_FACTOR);
-  // Combine the time stamp into one string
-  timestamp = readtimeData();
 
-  // Create dataframe to write
-  dataframe1 = (timestamp + "," + String(weight));
-}
 
 float dynamic_weight_analysis(std::vector<int> combined_scale_readings, float calibration_factor) {
   //Dynamic force analysis algorithm
@@ -376,6 +368,16 @@ float dynamic_weight_analysis(std::vector<int> combined_scale_readings, float ca
   float weight_placeholder = 123.56;
   //return 0;
   return weight_placeholder;
+}
+
+void readweightData(std::vector<int> combined_scale_readings) {
+ // weight = scale.get_units(5);
+  weight = dynamic_weight_analysis(combined_scale_readings, CALIBRATION_FACTOR);
+  // Combine the time stamp into one string
+  timestamp = readtimeData();
+
+  // Create dataframe to write
+  dataframe1 = (timestamp + "," + String(weight));
 }
 
 //***************************************************************************************************************************************************************************************
@@ -538,7 +540,7 @@ void loop() {
 
       //get weight data
       //weight = dynamic_weight_analysis(combined_scale_readings, CALIBRATION_FACTOR);
-      readweightData();
+      readweightData(combined_scale_readings);
 
       //write weight data
       writeWeightData();
