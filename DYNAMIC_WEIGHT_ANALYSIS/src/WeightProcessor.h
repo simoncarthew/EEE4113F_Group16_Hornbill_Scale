@@ -52,25 +52,26 @@ class WeightProcessor{
         std::pair<int,int> calculateUnpadInt(int thresh, std::vector<float>* sig);
         float maxValue(std::vector<float>* sig);
         float Mean(std::vector<float>* signal, int start, int end);
-        double Median(std::vector<float>* signal);
-        double Variance(std::vector<float>* signal,int start, int end);
+        float Median(std::vector<float>* signal, int start, int end);
+        float Variance(std::vector<float>* signal,int start, int end);
 
         // SIGNAL VALIDATION
         int ValuePeriod(float value, bool above_below, std::vector<float>* sig);
         int validateSignal(float min, float max, float sec_above_below, float min_total_sec, std::vector<float>* sig);
 
         // FILTERS
-        std::vector<float>* kalmanFilter();
+        std::vector<float>* kalmanFilter(std::vector<float>* sig, float initial_estimate = 0.0f, float initial_error = 100.0f, float process_noise = 0.1f, float measurement_noise = 10.0f);
         std::vector<float>* movingAverage(int window, std::vector<float>* sig);
         std::vector<float>* expMovingAverage(int window, std::vector<float>* sig);
-        std::vector<float>* medianFilter();
+        std::vector<float>* medianFilter(int window, std::vector<float>* sig);
+        std::vector<float>* whitEielers(float lambda, int iterations, std::vector<float>* sig);
         std::vector<float>* waveletTransform();
 
         // STABLE LOCALIZATION
         std::pair<int,int> mostStableInterval(std::vector<float>* sig, float interval_len);
 
         // MAIN FUNCTION
-        std::pair<float,float> estimateWeight(int min_weight = 500, int max_weight = 1500, float threshold_time = 0.4, float total_time = 1.5, float stable_interval_len = 0.3, std::string filter = "mov_ave", int window = 7, bool validate = true);
+        std::pair<float,float> estimateWeight(int min_weight = 500, int max_weight = 1500, float threshold_time = 0.4, float total_time = 1.5, float stable_interval_len = 0.3, std::string filter = "mov_ave", int window = 7, float lambda = 10, bool validate = true);
         
 
         // ALTERNATIVE METHODS
