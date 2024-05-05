@@ -393,7 +393,7 @@ std::pair<float,float> WeightProcessor::estimateWeight(int min_weight, int max_w
     }
 
     // calculate the percentage error
-    float perc_error = (variance / estimate) * 100;
+    float perc_error = (variance / estimate) * 100 + 0.05;
 
     // save calculations to output
     out.first = estimate;

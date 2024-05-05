@@ -169,7 +169,7 @@ void next_test(){
 
   // send data to the laptop
   WeightProcessor processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
-  std::pair<float,float> est = processor.estimateWeight(500, 1500, 0.4, 1.5, 0.3, "kal",7,1.0,true);
+  std::pair<float,float> est = processor.estimateWeight(500, 1500, 0.4, 1.5, 0.3, "med",7,1.0,true);
   Serial.print("Estimated Weight: ");
   Serial.println(est.first, 2);
 
