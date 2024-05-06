@@ -70,6 +70,7 @@ char days[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Fri
 float weight;
 float temperature;
 float humidity;
+float lastweight = 0.0;
 
 
 uint8_t HH;
@@ -363,9 +364,22 @@ float dynamic_weight_analysis(std::vector<int> combined_scale_readings, float ca
   return weight_placeholder;
 }
 
-void readweightData(std::vector<int> combined_scale_readings) {
- // weight = scale.get_units(5);
-  weight = dynamic_weight_analysis(combined_scale_readings, CALIBRATION_FACTOR);
+/*void readweightData(std::vector<int> combined_scale_readings) {
+  weight = scale.get_units(5);//using static weight measurements for now
+  lastweight = weight;
+  //weight = dynamic_weight_analysis(combined_scale_readings, CALIBRATION_FACTOR);//will be used once the dynamic force analysis algorithm is implemented
+  // Combine the time stamp into one string
+  timestamp = readtimeData();
+
+  // Create dataframe to write
+  dataframe1 = (timestamp + "," + String(weight));
+}*/
+
+//Read the static weight data from the scale
+void readweightData() {
+  weight = scale.get_units(5);
+
+  lastweight = weight;
   // Combine the time stamp into one string
   timestamp = readtimeData();
 
@@ -419,7 +433,8 @@ void displayData() {
   display.clearDisplay();
   display.setCursor(0, 0);  // Position the cursor
   display.print("Weight: ");   
-  display.println(weight); 
+  //display.println(weight); 
+  display.println(lastweight); //using static weight measurements for now
 
   display.setCursor(0, 10);
   display.print("Temp: ");
@@ -496,6 +511,9 @@ void loop() {
       Serial.println("Bird is on the scale and photos are being taken");
       takePictures();
 
+      readweightData();//this for satatic scale readings abd test
+      writeWeightData();
+
       while(is_bird_on_scale()) {
       //Record the raw scale readings when the bird is on the scale
       Serial.println("Bird is on the scale and Data is being recorded");
@@ -533,10 +551,11 @@ void loop() {
 
       //get weight data
       //weight = dynamic_weight_analysis(combined_scale_readings, CALIBRATION_FACTOR);
-      readweightData(combined_scale_readings);
+      //readweightData(combined_scale_readings);
+      //readweightData();
 
       //write weight data
-      writeWeightData();
+      //writeWeightData();
 
       //Printthe raw scale readings to the serial monitor as array
       Serial.print("Raw Scale Readings: [");

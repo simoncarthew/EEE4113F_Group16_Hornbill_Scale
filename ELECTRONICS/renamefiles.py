@@ -1,7 +1,7 @@
 import os
 
 # Set the directory path where the files are located
-directory = "/path/to/your/directory"
+directory = "Pics/"
 
 # Loop through all files in the directory
 for filename in os.listdir(directory):
