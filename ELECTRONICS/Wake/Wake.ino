@@ -43,7 +43,7 @@
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
-#define CALIBRATION_FACTOR -229.75
+#define CALIBRATION_FACTOR -233.64
 #define PIN_SPI_CS 5
 #define LOADCELL_DOUT_PIN 27//Will revert back to 16 if we encounter any issues
 #define LOADCELL_SCK_PIN 4

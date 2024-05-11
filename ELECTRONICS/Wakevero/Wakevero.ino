@@ -114,7 +114,8 @@ String WeightFile;
 
 //_______________________________________________________________________________________________________________________________________________________________________________________
 //Thresholds for Control
-long WEIGHT_THRESHOLD = -9200; //tHE rAW adc VALUE OF THE SCALE
+//long WEIGHT_THRESHOLD = -9200; //tHE rAW adc VALUE OF THE SCALE
+long WEIGHT_THRESHOLD = -17000;
 volatile bool isWeatherready = false;
 volatile bool shouldSleep = false;
 const long WEATHER_INTERVAL = 60000000; //60s in microseconds
@@ -147,7 +148,9 @@ void background_scale_readings() {
 */
 bool is_bird_on_scale() {
   //Check if the bird is on the scale
-  if(scale.read() < WEIGHT_THRESHOLD) {
+  long adcread = scale.read();
+  Serial.println(adcread);
+  if(adcread < WEIGHT_THRESHOLD) {
     return true;
   } else {
     return false;
