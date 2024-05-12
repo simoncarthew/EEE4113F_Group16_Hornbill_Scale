@@ -1,0 +1,11 @@
+Title: Bird Testing before doing 8
+Sampling Frequency: 10
+Weight: N/A
+Offset: -425661
+Scale: -224.08
+-444495
+-426850
+-425680
+-425659
+-425702
+-425745
