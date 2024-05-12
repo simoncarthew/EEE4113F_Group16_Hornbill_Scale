@@ -62,7 +62,7 @@ pair<string,float> read_sig(string sig_file, WeightProcessor& processor){
     processor.setLength(lc_sig_vec->size());
     processor.setForceWeight(lc_sig_vec);
     processor.setTime();
-    processor.setUnpadInt(processor.calculateUnpadInt(25,processor.getWeightSig()));
+    processor.setUnpadInt(processor.calculateUnpadInt(40,processor.getWeightSig()));
 
     // Close the file
     file.close();

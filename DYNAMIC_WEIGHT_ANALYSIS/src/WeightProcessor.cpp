@@ -15,7 +15,7 @@ WeightProcessor::WeightProcessor(): scale(0), offset(0), samp_rate(1), time(null
 WeightProcessor::WeightProcessor(std::vector<long>* lc_sig,float s, float o,int s_r) : scale(s), offset(o), samp_rate(s_r), vertical_velocity(nullptr), estimatedWeight(-1), sig_length(lc_sig->size()){
     setForceWeight(lc_sig);
     // setTime();
-    setUnpadInt(calculateUnpadInt(20,weight));
+    setUnpadInt(calculateUnpadInt(50,weight));
 }
 
 // DECONSTRUCTOR
@@ -106,6 +106,8 @@ float WeightProcessor::Median(std::vector<float>* signal,int start, int end) {
         return subarray[size / 2];
     }
 }
+
+// BIRD PERIOD LOCALIZATION
 
 pair<int,int> WeightProcessor::calculateUnpadInt(int thresh, std::vector<float>* sig){
     pair<int,int> out(0,sig_length);
@@ -282,32 +284,32 @@ std::vector<float>* WeightProcessor::whitEielers(float lambda, int iterations, s
 }
 
 std::vector<float>* WeightProcessor::kalmanFilter(std::vector<float>* sig, float initial_estimate, float initial_error, float process_noise, float measurement_noise) {
-    // Initialize state estimate
+    // initialize state estimate
     float x_hat = initial_estimate;
 
-    // Initialize error covariance matrix
+    // initialize error covariance matrix
     float P = initial_error;
 
     std::vector<float>* filtered = new vector<float>;
 
-    // Iterate over measurements
+    // iterate over measurements
     for (float value : (*sig)) {
-        // Prediction step (no control input assumed)
+        // prediction step (no control input assumed)
         x_hat += 0.0;
 
-        // Update error covariance matrix
+        // update error covariance matrix
         P += process_noise;
 
-        // Calculate Kalman gain
+        // calculate Kalman gain
         double K = P / (P + measurement_noise);
 
-        // Update state estimate based on measurement
+        // update state estimate based on measurement
         x_hat += K * (value - x_hat);
 
-        // Update error covariance matrix
+        // update error covariance matrix
         P = (1 - K) * P;
 
-        // Store filtered estimate
+        // store filtered estimate
         filtered->push_back(x_hat);
     }
 

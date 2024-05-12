@@ -1,5 +1,3 @@
-// used to record the raw signal and send to laptop to be stored as text file
-
 // imports
 #include <Arduino.h>
 #include "soc/rtc.h"
@@ -141,12 +139,9 @@ void get_signal(int thresh, std::vector<long>* vals){
   }
 }
 
-void next_test(){
+std::vector<long>* wait_and_get_signal(){
   // initialise signal
   std::vector<long>* vals = new std::vector<long>;
-
-  // inform user ready for next test
-  Serial.println("Ready for next test.");
 
   // wait for the next object to land
   Serial.println("Waiting for object.");
@@ -166,57 +161,167 @@ void next_test(){
     (*vals).insert((*vals).begin(), buffer[((bufferIndex % bufferSize) + i) % bufferSize]);
     // buffer[(bufferIndex + i) % bufferSize] = scale.get_offset();
   }
-
-  // send data to the laptop
-  WeightProcessor processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
-  std::pair<float,float> est = processor.estimateWeight(500, 1500, 0.4, 1.5, 0.3, "med",7,1.0,true);
-  Serial.print("Estimated Weight: ");
-  Serial.println(est.first, 2);
-
+  return vals;
 }
 
-void wait_for_user() {
-  Serial.println("Waiting for user. Enter \"start\" to begin.");
-  while (Serial.available() == 0 || Serial.readStringUntil('\n') != "start") {
-    // Do nothing until "start" command is received
-  }
-}
 
-void tare_between_tests(int stab_range){
-  // print old offset value
-  Serial.println("Setting new tare.");
-  Serial.print("Old offset = ");
-  Serial.println(scale.get_offset());
+int get_test_procedure() {
+  int selectedProcedure = 0;
 
-  // get new tare value
-  long values[10];
-  values[0] = scale.read();
-  int count = 1;
-  while (count < 10){
-    long val = scale.read();
-    long diff = fabs(val - values[count-1]);
-    if (diff < stab_range){
-      values[count] = val;
-      count = count + 1;
-    }else{
-      Serial.print("Not stable = ");
-      Serial.println(diff);
-      count = 1;
-      values[0] = scale.read();
+  Serial.println("Select test procedure 1-5:");
+  
+  while (true) {
+    // Wait until data is available on Serial
+    while (Serial.available() == 0) {
+      delay(100); // Delay to avoid busy wait
+    }
+    
+    // Read the input
+    String input = Serial.readStringUntil('\n');
+    
+    
+    // Convert input to integer
+    selectedProcedure = input.toInt();
+    
+    // Check if the input is within the range
+    if (selectedProcedure >= 1 && selectedProcedure <= 5) {
+      break;
+    } else {
+      Serial.println("Invalid input. Please select test procedure 1-5:");
     }
   }
+  
+  return selectedProcedure;
+}
 
-  // calculate average and set as tar
-  long sum = 0;
-  for (int i = 0; i < 10; ++i) {
-      sum += values[i];
+void test_1(){
+  std::vector<int> times = {2,30,60,120};
+
+  for(int time : times){
+    Serial.print("Place a 1kg weight on the scale while tapping and lifting it up with varying forces and frequency for approximately ");
+    Serial.print(time);
+    Serial.println(" seconds");
+    std::vector<long>* vals = wait_and_get_signal();
+    WeightProcessor processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
+    std::pair<float,float> est = processor.estimateWeight();
+    
+    if (est.first >= 0){
+      Serial.println("Estimation Success.");
+      Serial.print("Estimated Weight: ");
+      Serial.println(est.first, 3);
+      Serial.print("Associated Error: ");
+      Serial.println(est.second, 3);
+    }else{
+      Serial.print("Invalid signal. Validation Status:");
+      Serial.println(est.first, 0);
+    }
+    lastBufferIndex = bufferIndex;
   }
-  long average = sum/10;
-  scale.set_offset(average);
+}
 
-  // print new offset value
-  Serial.print("New offset = ");
-  Serial.println(scale.get_offset());
+void test_2(){
+    Serial.println("Wait a second before placing a 1kg weight on the scale for more than 1.5 seconds.");
+    
+    std::vector<long>* vals = wait_and_get_signal();
+    WeightProcessor processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
+    std::pair<float,float> est = processor.estimateWeight();
+    std::pair<int,int> bird_pres_int = processor.getUnpadInt();
+
+    Serial.print("Total Time: ");
+    Serial.println(vals->size() * 0.1, 2);
+    Serial.print("Initial Non Bird Present Time: ");
+    Serial.println((float)bird_pres_int.first * 0.1, 2);
+    Serial.print("Ending Non Bird Present Time: ");
+    Serial.println((float)vals->size() * 0.1 - (float)bird_pres_int.second * 0.1, 2);
+
+    lastBufferIndex = bufferIndex;
+}
+
+void test_3(){
+    Serial.println("Place a 1kg weight on the scale for more than 1.5 seconds.");
+    
+    std::vector<long>* vals = wait_and_get_signal();
+    WeightProcessor processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
+
+    Serial.print("Scale Value: ");
+    Serial.println(scale.get_scale());
+    Serial.print("Offset Value: ");
+    Serial.println(scale.get_offset());
+
+    
+    std::vector<float>* weights = processor.getWeightSig();
+    for (int i = 0; i < weights->size(); i++){
+        Serial.print("Raw Value: ");
+        Serial.print((*vals)[i]);
+        Serial.print("\tWeight Value: ");
+        Serial.println((*weights)[i],3);
+        delay(50);
+    }
+
+    lastBufferIndex = bufferIndex;
+}
+
+void test_4(){
+    Serial.println("Place a 1kg weight on the scale for 10 minutes.");
+    
+    std::vector<long>* vals = wait_and_get_signal();
+    WeightProcessor processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
+    std::pair<float,float> est = processor.estimateWeight();
+    std::vector<float>* weights = processor.getWeightSig();
+
+    Serial.print("Weight Vector length: ");
+    Serial.println(weights->size());
+    Serial.print("Weight Vector size: ");
+    Serial.print(((float)weights->size() * 32.0f) / (8.0f * 1024.0f),3);
+    Serial.println("kb");
+
+    Serial.println("Estimation Success.");
+    Serial.print("Estimated Weight: ");
+    Serial.println(est.first, 3);
+    Serial.print("Associated Error: ");
+    Serial.println(est.second, 3);
+
+    
+    lastBufferIndex = bufferIndex;
+}
+
+void test_5(){
+    // invalid signal length
+    Serial.println("Place a 1kg weight on the scale for less than 1.5 seconds ");
+    std::vector<long>* vals = wait_and_get_signal();
+    WeightProcessor processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
+    int val = processor.validateSignal(500,1500,0.4,1.5,processor.getWeightSig());
+    Serial.print("Validation status: ");
+    Serial.println(-1 * val);
+    lastBufferIndex = bufferIndex;
+
+    // invalid minimum weight
+    Serial.println("Place a weight less than the minimum weight of 0.5kg on the scale for more than 1.5 seconds. ");
+    vals = wait_and_get_signal();
+    processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
+    val = processor.validateSignal(500,1500,0.4,1.5,processor.getWeightSig());
+    Serial.print("Validation status: ");
+    Serial.println(-1 * val);
+    lastBufferIndex = bufferIndex;
+
+    // invalid minimum weight
+    Serial.println("Place a weight more than the maximum weight of 1.5kg on the scale for more than 1.5 seconds. ");
+    vals = wait_and_get_signal();
+    processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
+    val = processor.validateSignal(500,1500,0.4,1.5,processor.getWeightSig());
+    Serial.print("Validation status: ");
+    Serial.println(-1 * val);
+    lastBufferIndex = bufferIndex;
+
+    // invalid minimum weight
+    Serial.println("Place a weight between 0.5 and 1.5 kg’s on the scale for more than 1.5 seconds.");
+    vals = wait_and_get_signal();
+    processor = WeightProcessor(vals,scale.get_scale(), scale.get_offset(),10);
+    val = processor.validateSignal(500,1500,0.4,1.5,processor.getWeightSig());
+    Serial.print("Validation status: ");
+    Serial.println(-1 * val);
+    lastBufferIndex = bufferIndex;
+    
 }
 
 // set up the microcontroller
@@ -237,8 +342,19 @@ void loop() {
     calibrate();
   }
 
-  next_test();
-  lastBufferIndex = bufferIndex;
+  int test = get_test_procedure();
 
-  // tare_between_tests(150);
+  if (test == 1){
+    test_1();
+  } else if (test == 2){
+    test_2();
+  }else if (test == 3){
+    test_3();
+  }else if (test == 4){
+    test_4();
+  }else if (test == 5){
+    test_5();
+  }
+
+  lastBufferIndex = bufferIndex;
 }

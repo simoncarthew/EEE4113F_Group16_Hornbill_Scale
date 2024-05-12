@@ -15,7 +15,7 @@ WeightProcessor::WeightProcessor(): scale(0), offset(0), samp_rate(1), time(null
 WeightProcessor::WeightProcessor(std::vector<long>* lc_sig,float s, float o,int s_r) : scale(s), offset(o), samp_rate(s_r), vertical_velocity(nullptr), estimatedWeight(-1), sig_length(lc_sig->size()){
     setForceWeight(lc_sig);
     // setTime();
-    setUnpadInt(calculateUnpadInt(20,weight));
+    setUnpadInt(calculateUnpadInt(50,weight));
 }
 
 // DECONSTRUCTOR

@@ -63,13 +63,12 @@ class WeightProcessor{
         std::vector<float>* expMovingAverage(int window, std::vector<float>* sig);
         std::vector<float>* medianFilter(int window, std::vector<float>* sig);
         std::vector<float>* whitEielers(float lambda, int iterations, std::vector<float>* sig);
-        std::vector<float>* waveletTransform();
 
         // STABLE LOCALIZATION
         std::pair<int,int> mostStableInterval(std::vector<float>* sig, float interval_len);
 
         // MAIN FUNCTION
-        std::pair<float,float> estimateWeight(int min_weight = 500, int max_weight = 1500, float threshold_time = 0.4, float total_time = 1.5, float stable_interval_len = 0.3, std::string filter = "mov_ave", int window = 7, float lambda = 10, bool validate = true);
+        std::pair<float,float> estimateWeight(int min_weight = 500, int max_weight = 1500, float threshold_time = 0.4, float total_time = 1.5, float stable_interval_len = 0.3, std::string filter = "mov_ave", int window = 4, float lambda = 10, bool validate = true);
         
 
         // ALTERNATIVE METHODS

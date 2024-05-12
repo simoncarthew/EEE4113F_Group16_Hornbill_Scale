@@ -62,6 +62,33 @@ void writeFullSystemToFile(const std::vector<std::string>& strings, const std::v
     }
 }
 
+void writeBirdPeriod(int num1, int num2, const std::string& filename) {
+    std::ofstream outputFile(filename); 
+    
+    if (outputFile.is_open()) { 
+        outputFile << num1 << std::endl; 
+        outputFile << num2 << std::endl; 
+        outputFile.close();
+    } else {
+        std::cerr << "Unable to open the file: " << filename << std::endl;
+    }
+}
+
+void conversion(){
+    // set the path to the estimation file
+    string signal_file = "simulation/sig_files/conversion.txt";
+
+    // create the weight processor and read in the signal
+    WeightProcessor processor = WeightProcessor();
+    read_sig(signal_file,processor);
+
+    // get the bird present period
+    pair<int,int> intervals = processor.calculateUnpadInt(50,processor.getWeightSig());
+
+    // write the results to a text file
+    writeBirdPeriod(intervals.first,intervals.second,"simulation/outputs/bird_per_int.txt");
+}
+
 void validating(){
     std::vector<std::string> signal_files = {"simulation/sig_files/conversion.txt", "simulation/sig_files/invalid_len.txt", "simulation/sig_files/invalid_min.txt","simulation/sig_files/invalid_max.txt"};
     vector<int> validations;
@@ -75,7 +102,7 @@ void validating(){
         vector<float>* weight = processor.getWeightSig();
 
         // validate weight signal
-        int valid = processor.validateSignal(500,1500,0.4,1.5,weight);
+        int valid = processor.validateSignal(500,1500,0.4,1.5,weight) * -1;
 
         validations.push_back(valid);
 
@@ -119,7 +146,7 @@ void filtering(){
 
 void weight_estimate(){
     // set the path to the estimation file
-    string signal_file = "simulation/sig_files/weight_est.txt";
+    string signal_file = "simulation/sig_files/filter_1.txt";
 
     // create the weight processor and read in the signal
     WeightProcessor processor = WeightProcessor();
@@ -174,11 +201,11 @@ void full_system(){
 
     // write signals test file
     write_signal(processor.getWeightSig(),"simulation/outputs/full_sys_orig_sig.txt",processor,1000," Original Weight Signal","Original");
-    write_signal(mov,"simulation/outputs/full_sys_mov_ave_sig.txt",processor,1000," Weight Estimation with Moving Average","Moving Average Filter");
-    write_signal(exp_mov,"simulation/outputs/full_sys_exp_mov_ave_sig.txt",processor,1000," Weight Estimation with Exponential Moving Average","Exponential Moving Average");
-    write_signal(med,"simulation/outputs/full_sys_med_sig.txt",processor,1000," Weight Estimation with Median Filter","Median");
-    write_signal(whit,"simulation/outputs/full_sys_whit_sig.txt",processor,1000," Weight Estimation with Whittaker Eilers Filter","Whittaker Eilers");
-    write_signal(kal,"simulation/outputs/full_sys_kal_sig.txt",processor,1000," Weight Estimation with Kalman Filter","Kalman Filter");
+    write_signal(mov,"simulation/outputs/full_sys_mov_ave_sig.txt",processor,1000," Moving Average","Moving Average Filter");
+    write_signal(exp_mov,"simulation/outputs/full_sys_exp_mov_ave_sig.txt",processor,1000," Exponential Moving Average","Exponential Moving Average");
+    write_signal(med,"simulation/outputs/full_sys_med_sig.txt",processor,1000," Median Filter","Median");
+    write_signal(whit,"simulation/outputs/full_sys_whit_sig.txt",processor,1000," Whittaker Eilers Filter","Whittaker Eilers");
+    write_signal(kal,"simulation/outputs/full_sys_kal_sig.txt",processor,1000," Kalman Filter","Kalman Filter");
 
     // delete filtered signals
     delete mov;
@@ -189,6 +216,9 @@ void full_system(){
 }
 
 int main(){
+    conversion();
+    cout << "Conversion and Bird Present Simulation completed." << endl;
+
     validating();
     cout << "Validating Simulation completed." << endl;
 
