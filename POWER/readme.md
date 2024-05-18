@@ -11,7 +11,7 @@ The Power Subsystem serves as the power distribution center of the perch scale i
 * This system must be able to tell battery health to aid State of Charge (SoC) and State of Health (SoH) Estimation.
  
 ### Subsystems of Power System
-1. Energy Harvesting: Solar Panels harvests energy using solar radiation, cpnverts it to electrical energy to charge the battery.
+1. Energy Harvesting: Solar Panels harvests energy using solar radiation, converts it to electrical energy to charge the battery.
 2. PWM Controller: Generates PWM using NE555 Timer.
 3. Regulation: Takes in 12V from the battery regulates it into 5V/1A and pushes it out to the loads.
 4. Battery Status: Displays battery levels using zener-diode based LED circuit (Back-up)
