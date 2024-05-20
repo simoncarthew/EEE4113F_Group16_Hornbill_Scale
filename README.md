@@ -1,4 +1,4 @@
-# AUTONOMOUS SCLAE FOR WEIGHING SOUTHERN GROUND HORNBILLS
+# Integrated Weight, Temperature, and Humidity Monitoring System for Southern Ground-Hornbill Conservation Research
 
 ## Background
 Over the past few decades, the earth’s climate has been changing fast due to global warming. The
